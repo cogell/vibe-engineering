@@ -1,0 +1,164 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Theme overrides for Mira style */
+/* Note: JetBrains Mono font loaded from index.html */
+@theme inline {
+  /* Font: JetBrains Mono everywhere (even "sans") */
+  --font-sans: "JetBrains Mono", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Border radius: 0 everywhere (sharp corners) */
+  --radius: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+/* Light mode CSS variables (Stone base, Emerald accent) */
+@layer base {
+  :root {
+    /* Stone base - Light mode */
+    --background: oklch(0.98 0.00 106);
+    --foreground: oklch(0.15 0.00 49);
+
+    --card: oklch(0.98 0.00 106);
+    --card-foreground: oklch(0.15 0.00 49);
+
+    --popover: oklch(0.98 0.00 106);
+    --popover-foreground: oklch(0.15 0.00 49);
+
+    /* Emerald primary */
+    --primary: oklch(0.696 0.17 162);
+    --primary-foreground: oklch(0.98 0.00 106);
+
+    --secondary: oklch(0.92 0.00 49);
+    --secondary-foreground: oklch(0.22 0.01 56);
+
+    --muted: oklch(0.92 0.00 49);
+    --muted-foreground: oklch(0.55 0.01 58);
+
+    --accent: oklch(0.905 0.093 164);
+    --accent-foreground: oklch(0.22 0.01 56);
+
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.98 0.00 106);
+
+    --border: oklch(0.87 0.00 56);
+    --input: oklch(0.87 0.00 56);
+    --ring: oklch(0.696 0.17 162);
+
+    /* Chart colors */
+    --chart-1: oklch(0.696 0.17 162);
+    --chart-2: oklch(0.596 0.145 163);
+    --chart-3: oklch(0.508 0.118 166);
+    --chart-4: oklch(0.765 0.177 163);
+    --chart-5: oklch(0.845 0.143 165);
+
+    /* Sidebar (matches card for consistency) */
+    --sidebar: oklch(0.98 0.00 106);
+    --sidebar-foreground: oklch(0.15 0.00 49);
+    --sidebar-primary: oklch(0.696 0.17 162);
+    --sidebar-primary-foreground: oklch(0.98 0.00 106);
+    --sidebar-accent: oklch(0.905 0.093 164);
+    --sidebar-accent-foreground: oklch(0.22 0.01 56);
+    --sidebar-border: oklch(0.87 0.00 56);
+    --sidebar-ring: oklch(0.696 0.17 162);
+  }
+
+  /* Dark mode */
+  .dark {
+    --background: oklch(0.15 0.00 49);
+    --foreground: oklch(0.98 0.00 106);
+
+    --card: oklch(0.22 0.01 56);
+    --card-foreground: oklch(0.98 0.00 106);
+
+    --popover: oklch(0.22 0.01 56);
+    --popover-foreground: oklch(0.98 0.00 106);
+
+    --primary: oklch(0.696 0.17 162);
+    --primary-foreground: oklch(0.15 0.00 49);
+
+    --secondary: oklch(0.27 0.01 34);
+    --secondary-foreground: oklch(0.98 0.00 106);
+
+    --muted: oklch(0.27 0.01 34);
+    --muted-foreground: oklch(0.72 0.01 56);
+
+    --accent: oklch(0.378 0.077 169);
+    --accent-foreground: oklch(0.98 0.00 106);
+
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.98 0.00 106);
+
+    --border: oklch(0.37 0.01 68);
+    --input: oklch(0.37 0.01 68);
+    --ring: oklch(0.696 0.17 162);
+
+    --chart-1: oklch(0.765 0.177 163);
+    --chart-2: oklch(0.696 0.17 162);
+    --chart-3: oklch(0.596 0.145 163);
+    --chart-4: oklch(0.845 0.143 165);
+    --chart-5: oklch(0.508 0.118 166);
+
+    /* Sidebar (matches card for consistency) */
+    --sidebar: oklch(0.22 0.01 56);
+    --sidebar-foreground: oklch(0.98 0.00 106);
+    --sidebar-primary: oklch(0.696 0.17 162);
+    --sidebar-primary-foreground: oklch(0.15 0.00 49);
+    --sidebar-accent: oklch(0.378 0.077 169);
+    --sidebar-accent-foreground: oklch(0.98 0.00 106);
+    --sidebar-border: oklch(0.37 0.01 68);
+    --sidebar-ring: oklch(0.696 0.17 162);
+  }
+}
+
+/* Global base styles */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}

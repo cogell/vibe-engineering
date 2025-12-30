@@ -21,3 +21,6 @@
       ```
 - setup beads viewer
   - bv (open in terminal and it will prompt to update AGENTS.md)
+- setup styleguide
+  - bring in STYLE_GUIDE.md
+  - make sure it is referenced in AGENTS.md

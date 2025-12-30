@@ -1,0 +1,23 @@
+# Cloudflare Worker configuration for vibe-engineering
+# Using Workers with Static Assets (not Pages per CLAUDE.md)
+
+# Worker name - becomes subdomain: vibe-engineering.{account}.workers.dev
+name = "vibe-engineering"
+
+# Entry point for the Worker
+main = "src/worker.ts"
+
+# Compatibility date for latest features
+compatibility_date = "2024-12-30"
+
+# Static assets configuration
+[assets]
+# Directory containing built static files (Vite output)
+directory = "./dist"
+
+# Binding name to access assets in Worker code
+binding = "ASSETS"
+
+# SPA mode: return index.html for unknown routes
+# Enables client-side routing to work
+not_found_handling = "single-page-application"

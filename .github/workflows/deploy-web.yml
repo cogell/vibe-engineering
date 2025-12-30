@@ -1,0 +1,82 @@
+# Deploys the web application to Cloudflare Workers
+#
+# Required GitHub Secrets:
+# - CLOUDFLARE_API_TOKEN: API token with "Edit Cloudflare Workers" permission
+#   Create at: https://dash.cloudflare.com/profile/api-tokens
+#   Use template: "Edit Cloudflare Workers"
+#
+# - CLOUDFLARE_ACCOUNT_ID: Your Cloudflare account ID
+#   Find at: https://dash.cloudflare.com → right sidebar under "Account ID"
+#
+# Workflow triggers:
+# - Push to main branch (only when web/ files change)
+# - Manual dispatch (workflow_dispatch)
+
+name: Deploy Web
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'web/**'
+      - '.github/workflows/deploy-web.yml'
+
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    # Set working directory for all run steps
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Step 2: Setup pnpm
+      # Using pnpm per project preference (CLAUDE.md)
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # Step 3: Setup Node.js with caching
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: 'web/pnpm-lock.yaml'
+
+      # Step 4: Install dependencies
+      # --frozen-lockfile ensures reproducible builds
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 5: Build the application
+      # This runs: tsc && vite build
+      - name: Build
+        run: pnpm build
+
+      # Step 6: Deploy to Cloudflare Workers
+      # Uses official Cloudflare wrangler action
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: web
+          command: deploy
+
+      # Step 7: Output deployment URL
+      - name: Deployment Complete
+        run: |
+          echo "🚀 Deployed to Cloudflare Workers!"
+          echo "URL: https://vibe-engineering.workers.dev"
