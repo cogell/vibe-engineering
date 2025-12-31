@@ -17,6 +17,26 @@ interface Step {
   attribution?: string
 }
 
+interface PhaseGroupData {
+  phase: Phase
+  steps: { step: Step; originalIndex: number }[]
+}
+
+function groupStepsByPhase(steps: Step[]): PhaseGroupData[] {
+  const groups: PhaseGroupData[] = []
+
+  steps.forEach((step, index) => {
+    const lastGroup = groups[groups.length - 1]
+    if (lastGroup && lastGroup.phase === step.phase) {
+      lastGroup.steps.push({ step, originalIndex: index })
+    } else {
+      groups.push({ phase: step.phase, steps: [{ step, originalIndex: index }] })
+    }
+  })
+
+  return groups
+}
+
 const steps: Step[] = [
   {
     phase: 'brainstorm',
@@ -142,9 +162,80 @@ function PhaseConnector({
   )
 }
 
-function StepCard({ step, index }: { step: Step; index: number }) {
-  const config = phaseConfig[step.phase]
+function PhaseGroupTrack({ phase }: { phase: Phase }) {
+  const config = phaseConfig[phase]
 
+  return (
+    <div className={`flex items-center justify-center w-6 shrink-0 mr-4 ${config.color}`}>
+      <span className="[writing-mode:vertical-rl] rotate-180 text-sm font-semibold text-primary-foreground tracking-widest uppercase py-4">
+        {config.label}
+      </span>
+    </div>
+  )
+}
+
+function PhaseGroup({
+  group,
+  completedChecks,
+  toggleCheck,
+}: {
+  group: PhaseGroupData
+  completedChecks: Record<number, boolean>
+  toggleCheck: (index: number) => void
+}) {
+  return (
+    <div className="flex">
+      {/* Left track */}
+      <PhaseGroupTrack phase={group.phase} />
+
+      {/* Cards */}
+      <div className="flex-1 flex flex-col">
+        {group.steps.map(({ step, originalIndex }, i) => (
+          <div key={originalIndex}>
+            <StepCard step={step} index={originalIndex} />
+
+            {/* Connector within group (not after last card in group) */}
+            {i < group.steps.length - 1 && (
+              <PhaseConnector
+                checked={!!completedChecks[originalIndex]}
+                onToggle={() => toggleCheck(originalIndex)}
+                label={step.doneCheck}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PhaseTransition({
+  fromStep,
+  checked,
+  onToggle,
+}: {
+  fromStep: Step
+  checked: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div className="flex">
+      {/* Empty space to align with track */}
+      <div className="w-6 shrink-0 mr-4" />
+
+      {/* Connector */}
+      <div className="flex-1">
+        <PhaseConnector
+          checked={checked}
+          onToggle={onToggle}
+          label={fromStep.doneCheck}
+        />
+      </div>
+    </div>
+  )
+}
+
+function StepCard({ step, index }: { step: Step; index: number }) {
   return (
     <Card className="relative">
       <CardHeader className="pb-3">
@@ -154,11 +245,6 @@ function StepCard({ step, index }: { step: Step; index: number }) {
           </span>
           <span className="flex-1 text-sm text-muted-foreground">
             {step.trigger}
-          </span>
-          <span
-            className={`shrink-0 px-2 py-1 text-xs font-medium text-primary-foreground ${config.color}`}
-          >
-            {config.label}
           </span>
         </div>
       </CardHeader>
@@ -195,6 +281,7 @@ function StepCard({ step, index }: { step: Step; index: number }) {
 
 function WorkflowPage() {
   const [completedChecks, setCompletedChecks] = useState<Record<number, boolean>>({})
+  const groups = groupStepsByPhase(steps)
 
   const toggleCheck = (index: number) => {
     setCompletedChecks(prev => ({
@@ -213,16 +300,20 @@ function WorkflowPage() {
         </p>
 
         <div className="mt-8 flex flex-col">
-          {steps.map((step, index) => (
-            <div key={index}>
-              <StepCard step={step} index={index} />
+          {groups.map((group, groupIndex) => (
+            <div key={groupIndex}>
+              <PhaseGroup
+                group={group}
+                completedChecks={completedChecks}
+                toggleCheck={toggleCheck}
+              />
 
-              {/* Show connector between cards (not after the last one) */}
-              {index < steps.length - 1 && (
-                <PhaseConnector
-                  checked={!!completedChecks[index]}
-                  onToggle={() => toggleCheck(index)}
-                  label={step.doneCheck}
+              {/* Connector between groups */}
+              {groupIndex < groups.length - 1 && (
+                <PhaseTransition
+                  fromStep={group.steps[group.steps.length - 1].step}
+                  checked={!!completedChecks[group.steps[group.steps.length - 1].originalIndex]}
+                  onToggle={() => toggleCheck(group.steps[group.steps.length - 1].originalIndex)}
                 />
               )}
             </div>
