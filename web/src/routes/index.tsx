@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/')({
@@ -19,7 +19,9 @@ function HomePage() {
         </p>
 
         <div className="mt-8 flex justify-center gap-3">
-          <Button>Get Started</Button>
+          <Button asChild>
+            <Link to="/workflow">Workflow Prompts</Link>
+          </Button>
           <Button variant="outline">Documentation</Button>
         </div>
 
