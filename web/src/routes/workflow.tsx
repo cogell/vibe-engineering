@@ -9,10 +9,17 @@ export const Route = createFileRoute('/workflow')({
 
 type Phase = 'brainstorm' | 'plan' | 'execute' | 'verify' | 'compounding'
 
+interface PromptOption {
+  label: string
+  prompt: string
+  attribution?: string
+}
+
 interface Step {
   phase: Phase
   trigger: string
-  prompt: string
+  prompt?: string
+  prompts?: PromptOption[]
   doneCheck: string
   attribution?: string
 }
@@ -52,10 +59,25 @@ const steps: Step[] = [
   },
   {
     phase: 'plan',
-    trigger: 'When you know what to build, create tasks as beads...',
-    prompt: `OK so please take ALL of that and elaborate on it more and then create a comprehensive and granular set of beads for all this with tasks, subtasks, and dependency structure overlaid, with detailed comments so that the whole thing is totally self-contained and self-documenting (including relevant background, reasoning/justification, considerations, etc.-- anything we'd want our "future self" to know about the goals and intentions and thought process and how it serves the over-arching goals of the project.)`,
+    trigger: 'When you wanna refine a plan, ask for gaps/concerns',
+    prompt: `ultrathink. Carefully read thru our plan and our current repo to identify gaps in our thinking, planning, conclusions and raise any concerns you have, ask any clarifying questions to help you close those gaps that need my input: [plan.md]`,
+    doneCheck: 'Gaps identified & questions answered',
+  },
+  {
+    phase: 'plan',
+    trigger: 'When you know what to build, create tasks as beads',
+    prompts: [
+      {
+        label: 'Lean',
+        prompt: `Create beads for the essential tasks only. Keep it minimal—just enough to track the work. Avoid over-engineering: no subtasks unless truly needed, no elaborate documentation. Focus on what actually needs to be built, not hypothetical future needs.`,
+      },
+      {
+        label: 'Detailed',
+        prompt: `OK so please take ALL of that and elaborate on it more and then create a comprehensive and granular set of beads for all this with tasks, subtasks, and dependency structure overlaid, with detailed comments so that the whole thing is totally self-contained and self-documenting (including relevant background, reasoning/justification, considerations, etc.-- anything we'd want our "future self" to know about the goals and intentions and thought process and how it serves the over-arching goals of the project.)`,
+        attribution: '@doodlestein',
+      },
+    ],
     doneCheck: 'Beads created',
-    attribution: '@doodlestein',
   },
   {
     phase: 'plan',
@@ -69,6 +91,13 @@ const steps: Step[] = [
     trigger: 'When beads are good and it\'s time to build',
     prompt: `OK, so start systematically and methodically and meticulously and diligently executing those remaining beads tasks that you created in the optimal logical order! Don't forget to mark beads as you work on them.`,
     doneCheck: 'All tasks completed',
+    attribution: '@doodlestein',
+  },
+  {
+    phase: 'execute',
+    trigger: 'When build is done, make commits',
+    prompt: `Now, based on your knowledge of the project, commit all changed files now in a series of logically connected groupings with super detailed commit messages for each and then push. Take your time to do it right. Don't edit the code at all. Don't commit obviously ephemeral files.`,
+    doneCheck: 'Changes committed & pushed',
     attribution: '@doodlestein',
   },
   {
@@ -235,7 +264,45 @@ function PhaseTransition({
   )
 }
 
+function PromptBlock({ prompt, attribution }: { prompt: string; attribution?: string }) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex-1">
+        <pre className="whitespace-pre-wrap bg-muted p-3 text-sm font-mono">
+          {prompt}
+        </pre>
+        {attribution && (
+          <div className="mt-2 text-right text-xs text-muted-foreground">
+            —{' '}
+            {attribution.startsWith('@') ? (
+              <a
+                href={`https://x.com/${attribution.slice(1)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground underline underline-offset-2"
+              >
+                {attribution}
+              </a>
+            ) : (
+              attribution
+            )}
+          </div>
+        )}
+      </div>
+      <CopyButton text={prompt} />
+    </div>
+  )
+}
+
+function hasUltrathink(step: Step): boolean {
+  if (step.prompt?.includes('ultrathink')) return true
+  if (step.prompts?.some(p => p.prompt.includes('ultrathink'))) return true
+  return false
+}
+
 function StepCard({ step, index }: { step: Step; index: number }) {
+  const showRainbow = hasUltrathink(step)
+
   return (
     <Card className="relative">
       <CardHeader className="pb-3">
@@ -246,34 +313,32 @@ function StepCard({ step, index }: { step: Step; index: number }) {
           <span className="flex-1 text-sm text-muted-foreground">
             {step.trigger}
           </span>
+          {showRainbow && <span>🌈</span>}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <pre className="whitespace-pre-wrap bg-muted p-3 text-sm font-mono">
-              {step.prompt}
-            </pre>
-            {step.attribution && (
-              <div className="mt-2 text-right text-xs text-muted-foreground">
-                —{' '}
-                {step.attribution.startsWith('@') ? (
-                  <a
-                    href={`https://x.com/${step.attribution.slice(1)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-foreground underline underline-offset-2"
-                  >
-                    {step.attribution}
-                  </a>
-                ) : (
-                  step.attribution
+        {step.prompt && (
+          <PromptBlock prompt={step.prompt} attribution={step.attribution} />
+        )}
+        {step.prompts && (
+          <div className="flex flex-col gap-4">
+            {step.prompts.map((option, i) => (
+              <div key={i}>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {option.label}
+                </div>
+                <PromptBlock prompt={option.prompt} attribution={option.attribution} />
+                {i < step.prompts!.length - 1 && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="flex-1 border-t border-border" />
+                    <span className="text-xs font-medium text-muted-foreground">OR</span>
+                    <div className="flex-1 border-t border-border" />
+                  </div>
                 )}
               </div>
-            )}
+            ))}
           </div>
-          <CopyButton text={step.prompt} />
-        </div>
+        )}
       </CardContent>
     </Card>
   )
