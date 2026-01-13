@@ -76,14 +76,32 @@ const steps: Step[] = [
   {
     phase: 'plan',
     trigger: 'When you know what to build, create tasks as beads',
-    prompt: `Create a comprehensive and granular set of beads for all this with tasks, subtasks, and dependency structure overlaid, with detailed comments so that the whole thing is totally self-contained and self-documenting (including relevant background, reasoning/justification, considerations, etc.-- anything we'd want our "future self" to know about the goals and intentions and thought process and how it serves the over-arching goals of the project.)`,
+    prompts: [
+      {
+        label: 'Singular (one bead)',
+        prompt: `Create a bead for this task with detailed comments so that it is totally self-contained and self-documenting (including relevant background, reasoning/justification, considerations, etc.-- anything we'd want our "future self" to know about the goals and intentions and thought process and how it serves the over-arching goals of the project.)`,
+      },
+      {
+        label: 'Plural (multiple beads)',
+        prompt: `Create a comprehensive and granular set of beads for all this with tasks, subtasks, and dependency structure overlaid, with detailed comments so that the whole thing is totally self-contained and self-documenting (including relevant background, reasoning/justification, considerations, etc.-- anything we'd want our "future self" to know about the goals and intentions and thought process and how it serves the over-arching goals of the project.)`,
+      },
+    ],
     doneCheck: 'Beads created',
     attribution: '@doodlestein',
   },
   {
     phase: 'plan',
     trigger: 'When beads are made, dbl check them',
-    prompt: `Check over each bead super carefully-- are you sure it makes sense? Is it optimal? Could we change anything to make the system work better for users? If so, revise the beads. It's a lot easier and faster to operate in "plan space" before we start implementing these things!`,
+    prompts: [
+      {
+        label: 'Singular (one bead)',
+        prompt: `Check over the bead super carefully-- are you sure it makes sense? Is it optimal? Could we change anything to make the system work better for users? If so, revise the bead. It's a lot easier and faster to operate in "plan space" before we start implementing things!`,
+      },
+      {
+        label: 'Plural (multiple beads)',
+        prompt: `Check over each bead super carefully-- are you sure it makes sense? Is it optimal? Could we change anything to make the system work better for users? If so, revise the beads. It's a lot easier and faster to operate in "plan space" before we start implementing these things!`,
+      },
+    ],
     doneCheck: 'Plan reviewed & approved',
     attribution: '@doodlestein',
   },
