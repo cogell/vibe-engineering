@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -7,7 +7,7 @@ export const Route = createFileRoute('/workflow')({
   component: WorkflowPage,
 })
 
-type Phase = 'brainstorm' | 'plan' | 'execute' | 'verify' | 'compounding'
+type Phase = 'init' | 'brainstorm' | 'plan' | 'execute' | 'verify' | 'compounding'
 
 interface PromptOption {
   label: string
@@ -22,6 +22,8 @@ interface Step {
   prompts?: PromptOption[]
   doneCheck: string
   attribution?: string
+  notes?: ReactNode
+  loopBack?: boolean
 }
 
 interface PhaseGroupData {
@@ -46,6 +48,12 @@ function groupStepsByPhase(steps: Step[]): PhaseGroupData[] {
 
 const steps: Step[] = [
   {
+    phase: 'init',
+    trigger: 'When you want to start a new project/repo',
+    prompt: `Please start a new git init in this directory, touch a README.md with the h1 there matching the directory name, create a generic .gitignore file for ts/node project, commit everything, then make this a private repo with the same name as the directory with gh and push it up.`,
+    doneCheck: 'Repo initialized & pushed',
+  },
+  {
     phase: 'brainstorm',
     trigger: 'When you have a vague idea and need to explore directions',
     prompt: `Help me brainstorm ideas for [topic]. Consider different angles, potential challenges, and creative approaches. What are the key questions we should be asking?`,
@@ -62,22 +70,15 @@ const steps: Step[] = [
     trigger: 'When you wanna refine a plan, ask for gaps/concerns',
     prompt: `ultrathink. Carefully read thru our plan and our current repo to identify gaps in our thinking, planning, conclusions and raise any concerns you have, ask any clarifying questions to help you close those gaps that need my input: [plan.md]`,
     doneCheck: 'Gaps identified & questions answered',
+    notes: <>If the plan is complex, <strong>GPT-Pro</strong> can catch things that Opus 4.5 misses.</>,
+    loopBack: true,
   },
   {
     phase: 'plan',
     trigger: 'When you know what to build, create tasks as beads',
-    prompts: [
-      {
-        label: 'Lean',
-        prompt: `Create beads for the essential tasks only. Keep it minimal—just enough to track the work. Avoid over-engineering: no subtasks unless truly needed, no elaborate documentation. Focus on what actually needs to be built, not hypothetical future needs.`,
-      },
-      {
-        label: 'Detailed',
-        prompt: `OK so please take ALL of that and elaborate on it more and then create a comprehensive and granular set of beads for all this with tasks, subtasks, and dependency structure overlaid, with detailed comments so that the whole thing is totally self-contained and self-documenting (including relevant background, reasoning/justification, considerations, etc.-- anything we'd want our "future self" to know about the goals and intentions and thought process and how it serves the over-arching goals of the project.)`,
-        attribution: '@doodlestein',
-      },
-    ],
+    prompt: `Create a comprehensive and granular set of beads for all this with tasks, subtasks, and dependency structure overlaid, with detailed comments so that the whole thing is totally self-contained and self-documenting (including relevant background, reasoning/justification, considerations, etc.-- anything we'd want our "future self" to know about the goals and intentions and thought process and how it serves the over-arching goals of the project.)`,
     doneCheck: 'Beads created',
+    attribution: '@doodlestein',
   },
   {
     phase: 'plan',
@@ -89,7 +90,16 @@ const steps: Step[] = [
   {
     phase: 'execute',
     trigger: 'When beads are good and it\'s time to build',
-    prompt: `OK, so start systematically and methodically and meticulously and diligently executing those remaining beads tasks that you created in the optimal logical order! Don't forget to mark beads as you work on them.`,
+    prompts: [
+      {
+        label: 'Singular (one bead)',
+        prompt: `OK, so start systematically and methodically and meticulously and diligently executing that remaining bead task that you identified in the optimal logical order! Don't forget to mark the bead as you work on it.`,
+      },
+      {
+        label: 'Plural (multiple beads)',
+        prompt: `OK, so start systematically and methodically and meticulously and diligently executing those remaining beads tasks that you created in the optimal logical order! Don't forget to mark beads as you work on them.`,
+      },
+    ],
     doneCheck: 'All tasks completed',
     attribution: '@doodlestein',
   },
@@ -110,6 +120,7 @@ const steps: Step[] = [
 ]
 
 const phaseConfig: Record<Phase, { label: string; color: string }> = {
+  init: { label: 'Init', color: 'bg-chart-5' },
   brainstorm: { label: 'Brainstorming', color: 'bg-chart-1' },
   plan: { label: 'Planning', color: 'bg-chart-2' },
   execute: { label: 'Execution', color: 'bg-chart-3' },
@@ -264,13 +275,18 @@ function PhaseTransition({
   )
 }
 
-function PromptBlock({ prompt, attribution }: { prompt: string; attribution?: string }) {
+function PromptBlock({ prompt, attribution, notes }: { prompt: string; attribution?: string; notes?: ReactNode }) {
   return (
     <div className="flex gap-3">
       <div className="flex-1">
         <pre className="whitespace-pre-wrap bg-muted p-3 text-sm font-mono">
           {prompt}
         </pre>
+        {notes && (
+          <div className="mt-3 text-xs text-foreground">
+            💡 {notes}
+          </div>
+        )}
         {attribution && (
           <div className="mt-2 text-right text-xs text-muted-foreground">
             —{' '}
@@ -300,47 +316,85 @@ function hasUltrathink(step: Step): boolean {
   return false
 }
 
+function LoopBackIndicator() {
+  return (
+    <div className="absolute -right-10 top-1/2 -translate-y-1/2 w-10 h-24">
+      <svg
+        className="w-full h-full"
+        viewBox="0 0 40 96"
+        fill="none"
+      >
+        {/* Line coming out, down, and back */}
+        <path
+          d="M 0 24
+             L 32 24
+             L 32 72
+             L 0 72"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="text-muted-foreground"
+          fill="none"
+        />
+        {/* Arrow pointing left at the return */}
+        <path
+          d="M 10 64 L 0 72 L 10 80"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="text-muted-foreground"
+          fill="none"
+        />
+      </svg>
+      <span className="absolute top-1/2 -translate-y-1/2 left-full ml-1 text-[10px] text-muted-foreground whitespace-nowrap [writing-mode:vertical-rl]">
+        repeat as needed
+      </span>
+    </div>
+  )
+}
+
 function StepCard({ step, index }: { step: Step; index: number }) {
   const showRainbow = hasUltrathink(step)
 
   return (
-    <Card className="relative">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-muted text-sm font-medium">
-            {index + 1}
-          </span>
-          <span className="flex-1 text-sm text-muted-foreground">
-            {step.trigger}
-          </span>
-          {showRainbow && <span>🌈</span>}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {step.prompt && (
-          <PromptBlock prompt={step.prompt} attribution={step.attribution} />
-        )}
-        {step.prompts && (
-          <div className="flex flex-col gap-4">
-            {step.prompts.map((option, i) => (
-              <div key={i}>
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {option.label}
-                </div>
-                <PromptBlock prompt={option.prompt} attribution={option.attribution} />
-                {i < step.prompts!.length - 1 && (
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex-1 border-t border-border" />
-                    <span className="text-xs font-medium text-muted-foreground">OR</span>
-                    <div className="flex-1 border-t border-border" />
-                  </div>
-                )}
-              </div>
-            ))}
+    <div className="relative">
+      <Card className="relative">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-muted text-sm font-medium">
+              {index + 1}
+            </span>
+            <span className="flex-1 text-sm text-muted-foreground">
+              {step.trigger}
+            </span>
+            {showRainbow && <span>🌈</span>}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {step.prompt && (
+            <PromptBlock prompt={step.prompt} attribution={step.attribution} notes={step.notes} />
+          )}
+          {step.prompts && (
+            <div className="flex flex-col gap-4">
+              {step.prompts.map((option, i) => (
+                <div key={i}>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {option.label}
+                  </div>
+                  <PromptBlock prompt={option.prompt} attribution={option.attribution} />
+                  {i < step.prompts!.length - 1 && (
+                    <div className="mt-4 flex items-center gap-3">
+                      <div className="flex-1 border-t border-border" />
+                      <span className="text-xs font-medium text-muted-foreground">OR</span>
+                      <div className="flex-1 border-t border-border" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {step.loopBack && <LoopBackIndicator />}
+    </div>
   )
 }
 
